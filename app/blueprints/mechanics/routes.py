@@ -1,11 +1,15 @@
+# app/blueprints/mechanics/routes.py
 from flask import request, jsonify
 from app.extensions import db
 from app.models import Mechanic
+from app.utils import token_required       # <-- NEW
 from . import mechanics_bp
 from .schemas import MechanicSchema
 
+
 mechanic_schema = MechanicSchema()
 mechanics_schema = MechanicSchema(many=True)
+
 
 @mechanics_bp.route('/', methods=['POST'])
 def create_mechanic():
@@ -20,12 +24,15 @@ def create_mechanic():
     db.session.commit()
     return mechanic_schema.jsonify(new_mechanic), 201
 
+
 @mechanics_bp.route('/', methods=['GET'])
 def get_mechanics():
     mechanics = db.session.execute(db.select(Mechanic)).scalars().all()
     return mechanics_schema.jsonify(mechanics), 200
 
+
 @mechanics_bp.route('/<int:mechanic_id>', methods=['PUT'])
+@token_required                            # <-- NEW
 def update_mechanic(mechanic_id):
     mechanic = db.session.get(Mechanic, mechanic_id)
     if not mechanic:
@@ -38,7 +45,9 @@ def update_mechanic(mechanic_id):
     db.session.commit()
     return mechanic_schema.jsonify(mechanic), 200
 
+
 @mechanics_bp.route('/<int:mechanic_id>', methods=['DELETE'])
+@token_required                            # <-- NEW
 def delete_mechanic(mechanic_id):
     mechanic = db.session.get(Mechanic, mechanic_id)
     if not mechanic:

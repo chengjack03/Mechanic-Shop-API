@@ -1,8 +1,10 @@
 from flask import request, jsonify
-from app.extensions import db
+from app.extensions import db, limiter, cache
 from app.models import Customer
+from app.utils import encode_token, token_required
 from . import customers_bp
 from .schemas import CustomerSchema
+
 
 customer_schema = CustomerSchema()
 customers_schema = CustomerSchema(many=True)
@@ -15,7 +17,8 @@ def create_customer():
         name=data['name'],
         email=data['email'],
         phone=data['phone'],
-        address=data['address']
+        address=data['address'],
+        password=data['password']  # <-- added here
     )
     db.session.add(new_customer)
     db.session.commit()
@@ -23,6 +26,8 @@ def create_customer():
 
 # GET all customers
 @customers_bp.route('/', methods=['GET'])
+@limiter.limit("10 per minute")
+@cache.cached(timeout=60)
 def get_customers():
     customers = db.session.execute(db.select(Customer)).scalars().all()
     return customers_schema.jsonify(customers), 200
@@ -53,3 +58,33 @@ def delete_customer(customer_id):
     db.session.delete(customer)
     db.session.commit()
     return jsonify({"message": f"Customer {customer_id} deleted successfully"}), 200
+
+
+
+
+@customers_bp.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    customer = db.session.execute(
+        db.select(Customer).where(Customer.email == data['email'])
+    ).scalar_one_or_none()
+
+    if not customer or customer.password != data['password']:
+        return jsonify({"error": "Invalid credentials"}), 401
+
+    token = encode_token(customer.id)
+    return jsonify({"token": token}), 200
+
+
+# GET tickets for logged-in customer (token protected)
+@customers_bp.route('/my-tickets', methods=['GET'])
+@token_required
+def get_my_tickets():
+    from app.models import ServiceTicket
+    tickets = db.session.execute(
+        db.select(ServiceTicket).where(ServiceTicket.customer_id == request.customer_id)
+    ).scalars().all()
+
+    from app.blueprints.service_tickets.schemas import ServiceTicketSchema
+    tickets_schema = ServiceTicketSchema(many=True)
+    return tickets_schema.jsonify(tickets), 200

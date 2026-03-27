@@ -1,6 +1,8 @@
+# app/models.py
 from .extensions import db
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import List
+
 
 # Junction table — handles the Many-to-Many between ServiceTickets and Mechanics
 service_ticket_mechanic = db.Table(
@@ -8,6 +10,7 @@ service_ticket_mechanic = db.Table(
     db.Column('ticket_id', db.ForeignKey('service_tickets.id'), primary_key=True),
     db.Column('mechanic_id', db.ForeignKey('mechanics.id'), primary_key=True)
 )
+
 
 class Customer(db.Model):
     __tablename__ = 'customers'
@@ -17,8 +20,10 @@ class Customer(db.Model):
     email: Mapped[str] = mapped_column(db.String(360), nullable=False, unique=True)
     phone: Mapped[str] = mapped_column(db.String(20), nullable=False)
     address: Mapped[str] = mapped_column(db.String(255), nullable=False)
+    password: Mapped[str] = mapped_column(db.String(255), nullable=False)  # <-- added here
 
     service_tickets: Mapped[List['ServiceTicket']] = db.relationship(back_populates='customer')
+
 
 class Mechanic(db.Model):
     __tablename__ = 'mechanics'
@@ -33,6 +38,7 @@ class Mechanic(db.Model):
         secondary=service_ticket_mechanic,
         back_populates='mechanics'
     )
+
 
 class ServiceTicket(db.Model):
     __tablename__ = 'service_tickets'
