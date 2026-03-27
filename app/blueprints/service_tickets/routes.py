@@ -38,7 +38,6 @@ def get_tickets_by_customer(customer_id):
     return service_tickets_schema.jsonify(tickets), 200
 
 
-# COMBINED edit route — replaces add_mechanic + remove_mechanic
 @service_tickets_bp.route('/<int:ticket_id>/edit', methods=['PUT'])
 def edit_ticket_mechanics(ticket_id):
     ticket = db.session.get(ServiceTicket, ticket_id)
@@ -46,7 +45,6 @@ def edit_ticket_mechanics(ticket_id):
         return jsonify({"error": "Ticket not found"}), 404
 
     data = request.get_json()
-    # expects: {"add_ids": [1, 2], "remove_ids": [3]}
 
     for mechanic_id in data.get("add_ids", []):
         mechanic = db.session.get(Mechanic, mechanic_id)
@@ -58,5 +56,18 @@ def edit_ticket_mechanics(ticket_id):
         if mechanic and mechanic in ticket.mechanics:
             ticket.mechanics.remove(mechanic)
 
+    db.session.commit()
+    return service_ticket_schema.jsonify(ticket), 200
+
+
+@service_tickets_bp.route('/<int:ticket_id>/add_part/<int:part_id>', methods=['PUT'])
+def add_part_to_ticket(ticket_id, part_id):
+    from app.models import Inventory
+    ticket = db.session.get(ServiceTicket, ticket_id)
+    part = db.session.get(Inventory, part_id)
+    if not ticket or not part:
+        return jsonify({"error": "Ticket or Part not found"}), 404
+    if part not in ticket.inventory:
+        ticket.inventory.append(part)
     db.session.commit()
     return service_ticket_schema.jsonify(ticket), 200
