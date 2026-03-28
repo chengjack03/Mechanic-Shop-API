@@ -16,6 +16,13 @@ customers_schema = CustomerSchema(many=True)
 @customers_bp.route('/', methods=['POST'])
 def create_customer():
     data = request.get_json()
+
+    # Validate required fields
+    required = ['name', 'email', 'phone', 'address', 'password']
+    for field in required:
+        if field not in data:
+            return jsonify({"error": f"Missing required field: {field}"}), 400
+
     hashed = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
     new_customer = Customer(
         name=data['name'],
@@ -27,6 +34,7 @@ def create_customer():
     db.session.add(new_customer)
     db.session.commit()
     return customer_schema.jsonify(new_customer), 201
+
 
 
 @customers_bp.route('/login', methods=['POST'])

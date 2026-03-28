@@ -20,7 +20,15 @@ class TestCustomers(unittest.TestCase):
             db.create_all()
         self.client = self.app.test_client()
 
+    def tearDown(self):
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
+            db.engine.dispose()
+
+
     # ── CREATE ──────────────────────────────────────────────────────────────
+
 
     def test_create_customer(self):
         response = self.client.post('/customers/', json=self.customer_payload)
@@ -29,14 +37,16 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(response.json['email'], "test@email.com")
 
     def test_create_customer_missing_fields(self):
-        # Negative: missing required fields
+        # Negative: missing required fields should return 400
         response = self.client.post('/customers/', json={
             "name": "Bad User",
             "password": "pass"
         })
-        self.assertNotEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 400)
+
 
     # ── LOGIN ───────────────────────────────────────────────────────────────
+
 
     def test_login_customer(self):
         # First create the customer, then log in
@@ -47,7 +57,6 @@ class TestCustomers(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 200)
         self.assertIn('token', response.json)
-        return response.json['token']
 
     def test_login_invalid_credentials(self):
         # Negative: wrong password
@@ -58,7 +67,9 @@ class TestCustomers(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 401)
 
+
     # ── GET ALL ─────────────────────────────────────────────────────────────
+
 
     def test_get_customers(self):
         self.client.post('/customers/', json=self.customer_payload)
@@ -66,7 +77,9 @@ class TestCustomers(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.json, list)
 
+
     # ── GET BY ID ───────────────────────────────────────────────────────────
+
 
     def test_get_customer_by_id(self):
         create_resp = self.client.post('/customers/', json=self.customer_payload)
@@ -80,7 +93,9 @@ class TestCustomers(unittest.TestCase):
         response = self.client.get('/customers/99999')
         self.assertEqual(response.status_code, 404)
 
+
     # ── UPDATE ──────────────────────────────────────────────────────────────
+
 
     def test_update_customer(self):
         create_resp = self.client.post('/customers/', json=self.customer_payload)
@@ -102,7 +117,9 @@ class TestCustomers(unittest.TestCase):
         })
         self.assertEqual(response.status_code, 404)
 
+
     # ── DELETE ──────────────────────────────────────────────────────────────
+
 
     def test_delete_customer(self):
         create_resp = self.client.post('/customers/', json=self.customer_payload)
