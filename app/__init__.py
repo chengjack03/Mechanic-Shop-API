@@ -1,12 +1,20 @@
 # app/__init__.py
 from flask import Flask
 from .extensions import db, ma, limiter, cache
-from config import DevelopmentConfig
+from flask_swagger_ui import get_swaggerui_blueprint   # ← ADD THIS
 
+SWAGGER_URL = '/api/docs'                              # ← ADD THIS
+API_URL = '/static/swagger.yaml'                       # ← ADD THIS
 
-def create_app():
+swaggerui_blueprint = get_swaggerui_blueprint(         # ← ADD THIS
+    SWAGGER_URL,
+    API_URL,
+    config={'app_name': "Mechanic Shop API"}
+)
+
+def create_app(config_name="DevelopmentConfig"):       # ← CHANGED: now accepts a config name
     app = Flask(__name__)
-    app.config.from_object(DevelopmentConfig)
+    app.config.from_object(f'config.{config_name}')   # ← CHANGED: uses the argument dynamically
 
     db.init_app(app)
     ma.init_app(app)
@@ -22,6 +30,7 @@ def create_app():
     app.register_blueprint(mechanics_bp, url_prefix='/mechanics')
     app.register_blueprint(service_tickets_bp, url_prefix='/service-tickets')
     app.register_blueprint(inventory_bp, url_prefix='/inventory')
+    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)  # ← ADD THIS
 
     with app.app_context():
         from . import models
