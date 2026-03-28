@@ -2,7 +2,7 @@
 from flask import request, jsonify
 from app.extensions import db
 from app.models import Mechanic
-from app.utils import token_required       # <-- NEW
+from app.utils import token_required      
 from . import mechanics_bp
 from .schemas import MechanicSchema
 from sqlalchemy import func
