@@ -2,8 +2,8 @@ import os
 from app import create_app
 from config import config
 
-# Determine if we are in 'production' or 'development'
+# 'FLASK_CONFIG' will be set to 'production' on Render
 env = os.getenv('FLASK_CONFIG') or 'default'
 app = create_app(config[env])
 
-# No app.run() here. Gunicorn will look for the 'app' object in this file. It's no longer Flask's built-in server, so we don't call app.run(). Instead, Gunicorn will handle starting the server and will use the 'app' object we created.
+# Note: app.run() is removed because Gunicorn handles the process in the cloud. It's no longer Flask's responsibility to start the server directly.
