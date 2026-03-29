@@ -26,7 +26,7 @@ jobs:
       - name: Run Tests
         env:
           DEV_DATABASE_URL: mysql+mysqlconnector://root:password@127.0.0.1:3306/mechanic_shop_db
-          DATABASE_URL: sqlite:///:memory:
+          DATABASE_URL: "sqlite:///:memory:"
           SECRET_KEY: mechanic_shop_secret_2026
           FLASK_ENV: testing
         run: python -m unittest discover tests
