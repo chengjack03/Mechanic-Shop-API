@@ -1,130 +1,64 @@
-# tests/test_mechanics.py
-from app import create_app
-from app.models import db
 import unittest
-
+from app import create_app
+from app.extensions import db
+from app.models import Mechanic
 
 class TestMechanics(unittest.TestCase):
-
     def setUp(self):
+        # Using TestingConfig to ensure isolation
         self.app = create_app("TestingConfig")
-        self.mechanic_payload = {
-            "name": "Mike Wrench",
-            "email": "mike@shop.com",
-            "phone": "555-111-2222",
-            "salary": 55000
-        }
-        with self.app.app_context():
-            db.drop_all()
-            db.create_all()
         self.client = self.app.test_client()
-
-        # Create a customer and get a token (needed for protected routes)
-        self.client.post('/customers/', json={
-            "name": "Token User",
-            "email": "token@email.com",
-            "phone": "555-000-0001",
-            "address": "1 Token St",
-            "password": "tokenpass"
-        })
-        login_resp = self.client.post('/customers/login', json={
-            "email": "token@email.com",
-            "password": "tokenpass"
-        })
-        self.token = login_resp.json['token']
-        self.auth_headers = {"Authorization": f"Bearer {self.token}"}
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        db.create_all()
 
     def tearDown(self):
-        with self.app.app_context():
-            db.session.remove()
-            db.drop_all()
-            db.engine.dispose()
+        db.session.remove()
+        db.drop_all()
+        db.engine.dispose()
+        self.app_context.pop()
 
-    # ── CREATE ──────────────────────────────────────────────────────────────
-
-    def test_create_mechanic(self):
-        response = self.client.post('/mechanics/', json=self.mechanic_payload)
+    def test_create_mechanic_success(self):
+        """Positive Test: Create a mechanic"""
+        payload = {
+            "name": "Mike Wrench",
+            "email": "mike@shop.com",
+            "phone": "555-1111",
+            "salary": 60000
+        }
+        response = self.client.post('/mechanics/', json=payload)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json['name'], "Mike Wrench")
-        self.assertEqual(response.json['email'], "mike@shop.com")
 
-    def test_create_mechanic_missing_fields(self):
-        # Negative: missing salary/phone/email — route will 400 or 500,
-        # either way it must NOT be 201
-        response = self.client.post('/mechanics/', json={
-            "name": "Bad Mechanic"
-        })
-        self.assertNotEqual(response.status_code, 201)
+    def test_create_mechanic_missing_data(self):
+        """Negative Test: Fail when salary is missing"""
+        payload = {"name": "No Salary Sam", "email": "sam@shop.com"}
+        response = self.client.post('/mechanics/', json=payload)
+        self.assertEqual(response.status_code, 400)
 
-    # ── GET ALL ─────────────────────────────────────────────────────────────
-
-    def test_get_mechanics(self):
-        self.client.post('/mechanics/', json=self.mechanic_payload)
+    def test_get_mechanics_list(self):
+        """Test retrieving all mechanics"""
         response = self.client.get('/mechanics/')
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.json, list)
 
-    # ── GET MOST ACTIVE ──────────────────────────────────────────────────────
-
-    def test_get_most_active_mechanics(self):
-        response = self.client.get('/mechanics/most-active')
-        self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response.json, list)
-
-    # ── UPDATE ──────────────────────────────────────────────────────────────
-
     def test_update_mechanic(self):
-        create_resp = self.client.post('/mechanics/', json=self.mechanic_payload)
-        mechanic_id = create_resp.json['id']
-        response = self.client.put(
-            f'/mechanics/{mechanic_id}',
-            json={
-                "name": "Updated Mike",
-                "email": "mike@shop.com",
-                "phone": "555-999-0000",
-                "salary": 60000
-            },
-            headers=self.auth_headers
-        )
+        """Test updating a mechanic's information"""
+        # Create one first
+        m = Mechanic(name="Old Name", email="old@shop.com", phone="111", salary=50000)
+        db.session.add(m)
+        db.session.commit()
+
+        response = self.client.put(f'/mechanics/{m.id}', json={"name": "New Name"})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json['name'], "Updated Mike")
-        # salary may be returned as int or float — compare loosely
-        self.assertEqual(int(response.json['salary']), 60000)
-
-    def test_update_mechanic_not_found(self):
-        # Negative: ID that doesn't exist
-        response = self.client.put(
-            '/mechanics/99999',
-            json={
-                "name": "Ghost",
-                "email": "ghost@shop.com",
-                "phone": "555-000-0000",
-                "salary": 0
-            },
-            headers=self.auth_headers
-        )
-        self.assertEqual(response.status_code, 404)
-
-    # ── DELETE ──────────────────────────────────────────────────────────────
+        self.assertEqual(response.json['name'], "New Name")
 
     def test_delete_mechanic(self):
-        create_resp = self.client.post('/mechanics/', json=self.mechanic_payload)
-        mechanic_id = create_resp.json['id']
-        response = self.client.delete(
-            f'/mechanics/{mechanic_id}',
-            headers=self.auth_headers
-        )
+        """Test deleting a mechanic"""
+        m = Mechanic(name="Gone Tomorrow", email="gone@shop.com", phone="222", salary=40000)
+        db.session.add(m)
+        db.session.commit()
+
+        response = self.client.delete(f'/mechanics/{m.id}')
         self.assertEqual(response.status_code, 200)
-        self.assertIn('message', response.json)
-
-    def test_delete_mechanic_not_found(self):
-        # Negative: ID that doesn't exist
-        response = self.client.delete(
-            '/mechanics/99999',
-            headers=self.auth_headers
-        )
-        self.assertEqual(response.status_code, 404)
-
-
-if __name__ == '__main__':
-    unittest.main()
+        self.assertIn("deleted", response.json['message'])

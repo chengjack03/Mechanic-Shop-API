@@ -511,3 +511,104 @@ paths:
                 price: 12.99
               - id: 2
                 
+definitions:
+  CreateCustomerPayload:
+    type: object
+    required: [name, email]
+    properties:
+      name: {type: string, example: "Jane Doe"}
+      email: {type: string, example: "jane@email.com"}
+      phone: {type: string, example: "555-000-0000"}
+      address: {type: string, example: "123 Main St"}
+
+  CustomerResponse:
+    type: object
+    properties:
+      id: {type: integer}
+      name: {type: string}
+      email: {type: string}
+      phone: {type: string}
+
+  AllCustomers:
+    type: array
+    items:
+      $ref: "#/definitions/CustomerResponse"
+
+  LoginPayload:
+    type: object
+    required: [email, password]
+    properties:
+      email: {type: string, example: "jane@email.com"}
+      password: {type: string, example: "password123"}
+
+  LoginResponse:
+    type: object
+    properties:
+      token: {type: string}
+
+  CreateMechanicPayload:
+    type: object
+    required: [name, email]
+    properties:
+      name: {type: string, example: "Bob Wrench"}
+      email: {type: string, example: "bob@shop.com"}
+      salary: {type: number, example: 55000.00}
+
+  MechanicResponse:
+    type: object
+    properties:
+      id: {type: integer}
+      name: {type: string}
+      email: {type: string}
+
+  AllMechanics:
+    type: array
+    items:
+      $ref: "#/definitions/MechanicResponse"
+
+  CreateTicketPayload:
+    type: object
+    required: [vin, service_date, desc, customer_id]
+    properties:
+      vin: {type: string, example: "1HGCM82633A004352"}
+      service_date: {type: string, example: "2026-03-28"}
+      desc: {type: string, example: "Oil change"}
+      customer_id: {type: integer, example: 1}
+
+  TicketResponse:
+    type: object
+    properties:
+      id: {type: integer}
+      vin: {type: string}
+      service_date: {type: string}
+      desc: {type: string}
+      customer_id: {type: integer}
+
+  AllTickets:
+    type: array
+    items:
+      $ref: "#/definitions/TicketResponse"
+
+  CreatePartPayload:
+    type: object
+    required: [name, price]
+    properties:
+      name: {type: string, example: "Oil Filter"}
+      price: {type: number, example: 12.99}
+
+  PartResponse:
+    type: object
+    properties:
+      id: {type: integer}
+      name: {type: string}
+      price: {type: number}
+
+  AllParts:
+    type: array
+    items:
+      $ref: "#/definitions/PartResponse"
+
+  DeleteResponse:
+    type: object
+    properties:
+      message: {type: string}
