@@ -1,9 +1,18 @@
 import os
 from app import create_app
-from config import config
 
-# 'FLASK_CONFIG' will be set to 'production' on Render
-env = os.getenv('FLASK_CONFIG') or 'default'
-app = create_app(config[env])
+# Get the environment from Render, default to 'development'
+env = os.environ.get('FLASK_ENV', 'development')
 
-# Note: app.run() is removed because Gunicorn handles the process in the cloud. It's no longer Flask's responsibility to start the server directly.
+# Map the environment names to the CLASS NAMES in config.py
+config_map = {
+    'development': 'DevelopmentConfig',
+    'testing': 'TestingConfig',
+    'production': 'ProductionConfig'
+}
+
+# Pass the STRING name (e.g., 'ProductionConfig') to create_app
+app = create_app(config_map.get(env, 'DevelopmentConfig'))
+
+if __name__ == '__main__':
+    app.run()
