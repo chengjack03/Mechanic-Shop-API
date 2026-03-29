@@ -1,21 +1,25 @@
-# Mechanic Shop API
-A RESTful API for managing a mechanic shop's customers, mechanics, service tickets, and inventory. Built with Flask, SQLAlchemy, and MySQL.
+# Mechanic Shop API 🛠️
 
-## 🚀 Setup Instructions
-1. **Clone the repository:**
-   `git clone https://github.com/chengjack03/Mechanic-Shop-API.git`
-2. **Create a virtual environment:** `python -m venv venv`
-3. **Activate it:** `venv\Scripts\activate` (Windows) or `source venv/bin/activate` (Mac)
-4. **Install dependencies:** `pip install -r requirements.txt`
-5. **Create MySQL database:** `CREATE DATABASE mechanic_shop_db;`
-6. **Update Configuration:** Update `config.py` with your MySQL credentials.
-7. **Run the app:** `python app.py`
+A production-ready RESTful API for managing mechanic shop operations, including customers, mechanics, and service tickets. Built with Python, Flask, and SQLAlchemy.
 
----
+## 🚀 Live Demo
+- **API URL:** [https://mechanic-shop-api-5noq.onrender.com](https://mechanic-shop-api-5noq.onrender.com)
+- **Documentation:** [https://mechanic-shop-api-5noq.onrender.com/api/docs/](https://mechanic-shop-api-5noq.onrender.com/api/docs/)
 
-## 🧪 Testing
-This project uses the built-in `unittest` library. The suite includes 23 tests covering all blueprints, including positive CRUD operations and negative validation testing.
+## 🛠️ Tech Stack
+- **Framework:** Flask
+- **Database:** PostgreSQL (Hosted on Render)
+- **Production Server:** Gunicorn
+- **Testing:** Pytest
+- **CI/CD:** GitHub Actions
+- **Deployment:** Render
 
-**To run all tests:**
-```powershell
-python -m unittest discover tests
+## ⚙️ Features & Integration
+- **Automated Testing:** Every push to `main` triggers a GitHub Actions workflow to run unit tests.
+- **Continuous Deployment:** Successful test runs trigger an automatic deployment to Render via Deploy Hooks.
+- **Environment Safety:** Uses environment variables for sensitive data like `DATABASE_URL` and `SECRET_KEY`.
+
+## 🛠️ Local Setup
+1. Clone the repository:
+   ```bash
+   git clone [https://github.com/chengjack03/Mechanic-Shop-API.git](https://github.com/chengjack03/Mechanic-Shop-API.git)
