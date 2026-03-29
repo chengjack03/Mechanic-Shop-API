@@ -6,6 +6,7 @@ class Config:
 
 class DevelopmentConfig(Config):
     DEBUG = True
+    # Uses local environment variable for development
     SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL')
 
 class TestingConfig(Config):
@@ -14,9 +15,18 @@ class TestingConfig(Config):
     DEBUG = True
 
 class ProductionConfig(Config):
+    # This pulls the DATABASE_URL you set in Render's Environment tab
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
 
-# Dictionary to help the app choose the right config
+# --- MODULE ATTRIBUTES ---
+# These lines allow app.config.from_object('config.production') to work
+development = DevelopmentConfig
+testing = TestingConfig
+production = ProductionConfig
+default = DevelopmentConfig
+
+# --- DICTIONARY MAPPING ---
+# Keeping this for backward compatibility with any other parts of your app
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
