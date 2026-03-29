@@ -1,9 +1,7 @@
 name: Mechanic Shop API CI/CD
-
 on:
   push:
     branches: [ "main" ]
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -32,7 +30,6 @@ jobs:
           SECRET_KEY: mechanic_shop_secret_2026
           FLASK_ENV: testing
         run: python -m unittest discover tests
-
   deploy:
     needs: test
     runs-on: ubuntu-latest
