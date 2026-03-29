@@ -1,16 +1,29 @@
 import os
+from dotenv import load_dotenv
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(basedir, '.env'))
 
 class Config:
-    # Use the password you provided: CTct2026
-    SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://root:CTct2026@localhost/mechanic_shop_db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SECRET_KEY = 'be_m2_assignment_secret_key_2026'
-    TESTING = False
+    # Secret key for JWT/Sessions retrieved from environment
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-only'
 
 class DevelopmentConfig(Config):
-    DEBUG = True
+    # Your local MySQL database
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
+        'mysql+mysqlconnector://root:your_password@localhost/mechanic_shop_db'
 
-class TestingConfig(Config):
-    TESTING = True
-    # Required for the assignment: Use SQLite in-memory for unit tests
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+class ProductionConfig(Config):
+    # Render provides DATABASE_URL for Postgres. 
+    # We fix the prefix 'postgres://' to 'postgresql://' for SQLAlchemy compatibility.
+    uri = os.environ.get("DATABASE_URL")
+    if uri and uri.startswith("postgres://"):
+        uri = uri.replace("postgres://", "postgresql://", 1)
+    SQLALCHEMY_DATABASE_URI = uri
+
+config = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'default': DevelopmentConfig
+}
