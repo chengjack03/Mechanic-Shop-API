@@ -1,18 +1,9 @@
 # app/utils.py
-from jose import jwt, JWTError
+import jwt
 from functools import wraps
-from flask import request, jsonify
+from flask import request, jsonify, current_app
 from datetime import datetime, timezone, timedelta
 
-SECRET_KEY = "your-secret-key"  # change this to something strong
-
-def encode_token(customer_id):
-    payload = {
-        "sub": str(customer_id),
-        "iat": datetime.now(timezone.utc),
-        "exp": datetime.now(timezone.utc) + timedelta(hours=1)
-    }
-    return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
 def token_required(f):
     @wraps(f)
@@ -27,9 +18,9 @@ def token_required(f):
             return jsonify({"error": "Token is missing"}), 401
 
         try:
-            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            data = jwt.decode(token, current_app.config['SECRET_KEY'], algorithms=["HS256"])
             request.customer_id = int(data["sub"])
-        except JWTError:
+        except jwt.PyJWTError:
             return jsonify({"error": "Invalid or expired token"}), 401
 
         return f(*args, **kwargs)

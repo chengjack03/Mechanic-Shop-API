@@ -40,9 +40,7 @@ class TestMechanics(unittest.TestCase):
             db.drop_all()
             db.engine.dispose()
 
-
     # ── CREATE ──────────────────────────────────────────────────────────────
-
 
     def test_create_mechanic(self):
         response = self.client.post('/mechanics/', json=self.mechanic_payload)
@@ -51,15 +49,14 @@ class TestMechanics(unittest.TestCase):
         self.assertEqual(response.json['email'], "mike@shop.com")
 
     def test_create_mechanic_missing_fields(self):
-        # Negative: missing required fields
+        # Negative: missing salary/phone/email — route will 400 or 500,
+        # either way it must NOT be 201
         response = self.client.post('/mechanics/', json={
             "name": "Bad Mechanic"
         })
         self.assertNotEqual(response.status_code, 201)
 
-
     # ── GET ALL ─────────────────────────────────────────────────────────────
-
 
     def test_get_mechanics(self):
         self.client.post('/mechanics/', json=self.mechanic_payload)
@@ -67,18 +64,14 @@ class TestMechanics(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.json, list)
 
-
-    # ── GET MOST ACTIVE ─────────────────────────────────────────────────────
-
+    # ── GET MOST ACTIVE ──────────────────────────────────────────────────────
 
     def test_get_most_active_mechanics(self):
         response = self.client.get('/mechanics/most-active')
         self.assertEqual(response.status_code, 200)
         self.assertIsInstance(response.json, list)
 
-
     # ── UPDATE ──────────────────────────────────────────────────────────────
-
 
     def test_update_mechanic(self):
         create_resp = self.client.post('/mechanics/', json=self.mechanic_payload)
@@ -95,20 +88,24 @@ class TestMechanics(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['name'], "Updated Mike")
-        self.assertEqual(response.json['salary'], 60000)
+        # salary may be returned as int or float — compare loosely
+        self.assertEqual(int(response.json['salary']), 60000)
 
     def test_update_mechanic_not_found(self):
         # Negative: ID that doesn't exist
         response = self.client.put(
             '/mechanics/99999',
-            json={"name": "Ghost"},
+            json={
+                "name": "Ghost",
+                "email": "ghost@shop.com",
+                "phone": "555-000-0000",
+                "salary": 0
+            },
             headers=self.auth_headers
         )
         self.assertEqual(response.status_code, 404)
 
-
     # ── DELETE ──────────────────────────────────────────────────────────────
-
 
     def test_delete_mechanic(self):
         create_resp = self.client.post('/mechanics/', json=self.mechanic_payload)
