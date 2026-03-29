@@ -1,29 +1,25 @@
 import os
-from dotenv import load_dotenv
-
-basedir = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(basedir, '.env'))
 
 class Config:
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    # Secret key for JWT/Sessions retrieved from environment
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-123'
 
 class DevelopmentConfig(Config):
-    # This remains for your local MySQL testing
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL') or \
-        'mysql+mysqlconnector://root:your_password@localhost/mechanic_shop_db'
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DEV_DATABASE_URL')
+
+class TestingConfig(Config):
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    DEBUG = True
 
 class ProductionConfig(Config):
-    # This pulls the PostgreSQL URL from Render's settings
-    uri = os.environ.get("DATABASE_URL")
-    # SQLAlchemy requires 'postgresql://' but Render sometimes provides 'postgres://'
-    if uri and uri.startswith("postgres://"):
-        uri = uri.replace("postgres://", "postgresql://", 1)
-    SQLALCHEMY_DATABASE_URI = uri
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
 
+# Dictionary to help the app choose the right config
 config = {
     'development': DevelopmentConfig,
+    'testing': TestingConfig,
     'production': ProductionConfig,
     'default': DevelopmentConfig
 }
